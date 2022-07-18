@@ -1,4 +1,4 @@
-% toroquatre
+# toroquatre
 toroquatre is a simple toroidal quadtree data structure library.
 
 A quadtree is used for efficient collision detection between lots of objects.
