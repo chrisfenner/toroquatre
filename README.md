@@ -7,7 +7,7 @@ position, the objects' two-dimensional spatial relationships to each other are
 stored in a tree, where each node either contains a limited number of leaf
 nodes, or four child nodes dividing the total space of the parent node.
 
-A toroidal space loops around across both the top and bottom edges, like
+A toroidal space wraps around the sides and bottom edges, like
 Pac-Man. If you travel to the right off the right edge of the space, you come
 back in on the left side. This library is intended to provide an efficient
 quadtree that comprehends this wrapping so callers don't have to.
