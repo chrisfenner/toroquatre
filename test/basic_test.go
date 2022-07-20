@@ -35,7 +35,7 @@ func TestAddSomeElements(t *testing.T) {
 			if err != nil {
 				t.Fatalf("error from New: %v", err)
 			}
-			points := []toroquatre.Point{
+			points := []toroquatre.Vector{
 				{X: 1.0, Y: 0.0},
 				{X: 2.0, Y: 1.0},
 				{X: 4.0, Y: 1.0},
@@ -88,29 +88,29 @@ func TestAddSomeElements(t *testing.T) {
 			// Look for particular elements in specific subregions
 			type subregionQuery struct {
 				wantIDs     []uint64
-				topLeft     toroquatre.Point
-				bottomRight toroquatre.Point
+				topLeft     toroquatre.Vector
+				bottomRight toroquatre.Vector
 			}
 			for i, q := range []subregionQuery{
 				{
 					[]uint64{0, 1, 6},
-					toroquatre.Point{X: 0.0, Y: 0.0},
-					toroquatre.Point{X: 2.1, Y: 3.1},
+					toroquatre.Vector{X: 0.0, Y: 0.0},
+					toroquatre.Vector{X: 2.1, Y: 3.1},
 				},
 				{
 					[]uint64{3, 5, 6, 8},
-					toroquatre.Point{X: 4.5, Y: 0.5},
-					toroquatre.Point{X: 1.5, Y: 6.5},
+					toroquatre.Vector{X: 4.5, Y: 0.5},
+					toroquatre.Vector{X: 1.5, Y: 6.5},
 				},
 				{
 					[]uint64{0, 3, 7},
-					toroquatre.Point{X: 4.5, Y: 8.5},
-					toroquatre.Point{X: 1.5, Y: 1.5},
+					toroquatre.Vector{X: 4.5, Y: 8.5},
+					toroquatre.Vector{X: 1.5, Y: 1.5},
 				},
 				{
 					[]uint64{2, 3, 5, 7},
-					toroquatre.Point{X: 3.5, Y: 5.5},
-					toroquatre.Point{X: 5.5, Y: 1.5},
+					toroquatre.Vector{X: 3.5, Y: 5.5},
+					toroquatre.Vector{X: 5.5, Y: 1.5},
 				},
 			} {
 				t.Run(fmt.Sprintf("subregions_%v", i), func(t *testing.T) {
@@ -133,13 +133,13 @@ func TestLotsOfElements(t *testing.T) {
 			}
 			for i := 0; i < 20000; i++ {
 				angle := float64(i) * math.Pi / 10000
-				tree.Put(uint64(i), toroquatre.Point{X: 5.0 + (4.0 * math.Cos(angle)), Y: 5.0 + (4.0 * math.Sin(angle))})
+				tree.Put(uint64(i), toroquatre.Vector{X: 5.0 + (4.0 * math.Cos(angle)), Y: 5.0 + (4.0 * math.Sin(angle))})
 			}
-			one := tree.Find(toroquatre.Point{X: 0.9999, Y: 4.9999}, toroquatre.Point{X: 1.0001, Y: 5.0001})
+			one := tree.Find(toroquatre.Vector{X: 0.9999, Y: 4.9999}, toroquatre.Vector{X: 1.0001, Y: 5.0001})
 			if len(one) != 1 {
 				t.Errorf("wanted 1 elements got %v", one)
 			}
-			quarter := tree.Find(toroquatre.Point{X: 0.0, Y: 0.0}, toroquatre.Point{X: 5.0, Y: 5.0})
+			quarter := tree.Find(toroquatre.Vector{X: 0.0, Y: 0.0}, toroquatre.Vector{X: 5.0, Y: 5.0})
 			if len(quarter) != 5000 {
 				t.Errorf("wanted 5000 elements got %v", len(quarter))
 			}

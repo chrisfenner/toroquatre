@@ -7,21 +7,21 @@ import (
 	"strings"
 )
 
-type Point struct {
+type Vector struct {
 	X, Y float64
 }
 
 type ToroidalQuadtree struct {
 	nodeLimit int
-	leafMap   map[uint64]Point
+	leafMap   map[uint64]Vector
 	root      *tree
 }
 
 type tree struct {
 	tqt *ToroidalQuadtree
 	// Bounding box for the tree.
-	topLeft     Point
-	bottomRight Point
+	topLeft     Vector
+	bottomRight Vector
 	// If the tree has nodeLimit or fewer leaves, their IDs are here.
 	leaves []uint64
 	// Once the tree has more than nodeLimit leaves, it instead contains 4 subtrees.
@@ -31,7 +31,7 @@ type tree struct {
 	count int
 }
 
-func medianLocation(ids []uint64, leafMap map[uint64]Point) Point {
+func medianLocation(ids []uint64, leafMap map[uint64]Vector) Vector {
 	sortedX := make([]float64, len(ids))
 	sortedY := make([]float64, len(ids))
 	for i, id := range ids {
@@ -41,7 +41,7 @@ func medianLocation(ids []uint64, leafMap map[uint64]Point) Point {
 	sort.Float64s(sortedX)
 	sort.Float64s(sortedY)
 
-	var result Point
+	var result Vector
 	// Even length list: take the average of the two middle elements
 	if len(ids)%2 == 0 {
 		idx1 := len(ids) / 2
@@ -71,14 +71,14 @@ func (t *tree) subdivide() {
 	}
 	t.branches[1] = &tree{
 		tqt:         t.tqt,
-		topLeft:     Point{X: median.X, Y: t.topLeft.Y},
-		bottomRight: Point{X: t.bottomRight.X, Y: median.Y},
+		topLeft:     Vector{X: median.X, Y: t.topLeft.Y},
+		bottomRight: Vector{X: t.bottomRight.X, Y: median.Y},
 		leaves:      make([]uint64, 0, t.tqt.nodeLimit),
 	}
 	t.branches[2] = &tree{
 		tqt:         t.tqt,
-		topLeft:     Point{X: t.topLeft.X, Y: median.Y},
-		bottomRight: Point{X: median.X, Y: t.bottomRight.Y},
+		topLeft:     Vector{X: t.topLeft.X, Y: median.Y},
+		bottomRight: Vector{X: median.X, Y: t.bottomRight.Y},
 		leaves:      make([]uint64, 0, t.tqt.nodeLimit),
 	}
 	t.branches[3] = &tree{
@@ -108,7 +108,7 @@ func (t *tree) subdivide() {
 	t.leaves = nil
 }
 
-func (t *tree) put(id uint64, p Point) {
+func (t *tree) put(id uint64, p Vector) {
 	if t.branches[0] == nil {
 		t.leaves = append(t.leaves, id)
 		t.count++
@@ -133,7 +133,7 @@ func (t *tree) put(id uint64, p Point) {
 	}
 }
 
-func (t *tree) remove(id uint64, leafMap map[uint64]Point) {
+func (t *tree) remove(id uint64, leafMap map[uint64]Vector) {
 	loc := leafMap[id]
 
 	if len(t.leaves) != 0 {
@@ -179,7 +179,7 @@ func (t *tree) remove(id uint64, leafMap map[uint64]Point) {
 	delete(leafMap, id)
 }
 
-func isWithin(loc, topLeft, bottomRight Point) bool {
+func isWithin(loc, topLeft, bottomRight Vector) bool {
 	if topLeft.X < bottomRight.X {
 		if loc.X < topLeft.X || loc.X >= bottomRight.X {
 			return false
@@ -202,7 +202,7 @@ func isWithin(loc, topLeft, bottomRight Point) bool {
 	return true
 }
 
-func regionWithin(rTopLeft, rBottomRight, topLeft, bottomRight Point) bool {
+func regionWithin(rTopLeft, rBottomRight, topLeft, bottomRight Vector) bool {
 	if rTopLeft.X < rBottomRight.X {
 		if rTopLeft.X >= bottomRight.X || rBottomRight.X <= topLeft.X {
 			return false
@@ -225,7 +225,7 @@ func regionWithin(rTopLeft, rBottomRight, topLeft, bottomRight Point) bool {
 	return true
 }
 
-func (t *tree) find(topLeft, bottomRight Point) []uint64 {
+func (t *tree) find(topLeft, bottomRight Vector) []uint64 {
 	result := make([]uint64, 0, t.count)
 
 	if t.branches[0] == nil {
@@ -254,12 +254,12 @@ func New(nodeLimit int, width, height float64) (*ToroidalQuadtree, error) {
 
 	result := ToroidalQuadtree{
 		nodeLimit: nodeLimit,
-		leafMap:   make(map[uint64]Point),
+		leafMap:   make(map[uint64]Vector),
 	}
 	result.root = &tree{
 		tqt:         &result,
-		topLeft:     Point{X: 0.0, Y: 0.0},
-		bottomRight: Point{X: width, Y: height},
+		topLeft:     Vector{X: 0.0, Y: 0.0},
+		bottomRight: Vector{X: width, Y: height},
 		leaves:      make([]uint64, 0, nodeLimit),
 	}
 
@@ -278,7 +278,7 @@ func (t *ToroidalQuadtree) Height() float64 {
 
 // Put sets the location of the element with the given ID.
 // If the element is already within the quadtree, moves the element from its old location.
-func (t *ToroidalQuadtree) Put(id uint64, p Point) bool {
+func (t *ToroidalQuadtree) Put(id uint64, p Vector) bool {
 	if p.X < 0.0 || p.Y < 0.0 || p.X >= t.root.bottomRight.X || p.Y >= t.root.bottomRight.Y {
 		return false
 	}
@@ -306,7 +306,7 @@ func (t *ToroidalQuadtree) Remove(id uint64) bool {
 }
 
 // Get returns the location of the element with the given ID.
-func (t *ToroidalQuadtree) Get(id uint64) *Point {
+func (t *ToroidalQuadtree) Get(id uint64) *Vector {
 	if loc, ok := t.leafMap[id]; ok {
 		return &loc
 	}
@@ -317,7 +317,7 @@ func (t *ToroidalQuadtree) Get(id uint64) *Point {
 // NOTE: A region's location interval is closed on the left side and open on the right.
 // The region ((0.0, 0.0), (1.0, 1.0)) contains the point (0.0, 0.0), but not (1.0, 1.0).
 // Both corners of the selected region must be within the bounds of the quadtree.
-func (t *ToroidalQuadtree) Find(topLeft, bottomRight Point) []uint64 {
+func (t *ToroidalQuadtree) Find(topLeft, bottomRight Vector) []uint64 {
 	if topLeft.X < 0.0 || topLeft.Y < 0.0 || topLeft.X > t.root.bottomRight.X || topLeft.Y > t.root.bottomRight.Y {
 		return nil
 	}
