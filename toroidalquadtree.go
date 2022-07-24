@@ -139,7 +139,7 @@ func (t *tree) remove(id uint64, leafMap map[uint64]Vector) {
 	if len(t.leaves) != 0 {
 		// Find the element to remove, overwrite it with the last element, and subslice the leaves
 		for i := 0; i < len(t.leaves)-1; i++ {
-			if t.leaves[id] == id {
+			if t.leaves[i] == id {
 				t.leaves[i] = t.leaves[len(t.leaves)-1]
 				break
 			}
