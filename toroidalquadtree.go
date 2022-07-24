@@ -111,8 +111,6 @@ func (t *tree) subdivide() {
 func (t *tree) put(id uint64, p Vector) {
 	if t.branches[0] == nil {
 		t.leaves = append(t.leaves, id)
-		t.count++
-
 		if len(t.leaves) > t.tqt.nodeLimit {
 			t.subdivide()
 		}
@@ -131,11 +129,10 @@ func (t *tree) put(id uint64, p Vector) {
 		}
 		t.branches[destRegion].put(id, p)
 	}
+	t.count++
 }
 
 func (t *tree) remove(id uint64, leafMap map[uint64]Vector) {
-	loc := leafMap[id]
-
 	if len(t.leaves) != 0 {
 		// Find the element to remove, overwrite it with the last element, and subslice the leaves
 		for i := 0; i < len(t.leaves)-1; i++ {
@@ -146,6 +143,7 @@ func (t *tree) remove(id uint64, leafMap map[uint64]Vector) {
 		}
 		t.leaves = t.leaves[:len(t.leaves)-1]
 	} else {
+		loc := leafMap[id]
 		// Delete from the proper subtree
 		median := t.branches[0].bottomRight
 		var destRegion int
@@ -167,7 +165,7 @@ func (t *tree) remove(id uint64, leafMap map[uint64]Vector) {
 	// before we merge it here.
 	// Wait to merge until we've gone 2 below the node limit, so a node can be efficiently
 	// moved around the tree without unnecessary merging and re-subdividing.
-	if t.count < t.tqt.nodeLimit-1 {
+	if t.count < t.tqt.nodeLimit-1 && t.branches[0] != nil {
 		// This region has shrunk enough that we should merge its children up
 		t.leaves = make([]uint64, 0, t.tqt.nodeLimit)
 		for i, child := range t.branches {

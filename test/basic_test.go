@@ -133,6 +133,8 @@ func TestLotsOfElements(t *testing.T) {
 			}
 			for i := 0; i < 20000; i++ {
 				angle := float64(i) * math.Pi / 10000
+				// Put the elemenet into one spot and then move it.
+				tree.Put(uint64(i), toroquatre.Vector{X: 5.0 + (3.0 * math.Cos(angle)), Y: 5.0 + (3.0 * math.Sin(angle))})
 				tree.Put(uint64(i), toroquatre.Vector{X: 5.0 + (4.0 * math.Cos(angle)), Y: 5.0 + (4.0 * math.Sin(angle))})
 			}
 			one := tree.Find(toroquatre.Vector{X: 0.9999, Y: 4.9999}, toroquatre.Vector{X: 1.0001, Y: 5.0001})
@@ -142,6 +144,38 @@ func TestLotsOfElements(t *testing.T) {
 			quarter := tree.Find(toroquatre.Vector{X: 0.0, Y: 0.0}, toroquatre.Vector{X: 5.0, Y: 5.0})
 			if len(quarter) != 5000 {
 				t.Errorf("wanted 5000 elements got %v", len(quarter))
+			}
+		})
+	}
+}
+
+func TestAddRemove(t *testing.T) {
+	for _, nodeLimit := range []int{4, 5, 6, 7} {
+		t.Run(fmt.Sprintf("nodeLimit=%d", nodeLimit), func(t *testing.T) {
+			tree, err := toroquatre.New(nodeLimit, 10.0, 10.0)
+			if err != nil {
+				t.Fatalf("error from New: %v", err)
+			}
+			tree.Put(0, toroquatre.Vector{X: 1.0, Y: 2.0})
+			if !tree.Remove(0) {
+				t.Errorf("want true got false")
+			}
+			if tree.Remove(0) {
+				t.Errorf("want false got true")
+			}
+			tree.Put(0, toroquatre.Vector{X: 1.0, Y: 2.0})
+			tree.Put(0, toroquatre.Vector{X: 1.0, Y: 3.0})
+			if found := tree.Find(toroquatre.Vector{X: 0.99, Y: 1.99}, toroquatre.Vector{X: 1.01, Y: 2.01}); len(found) != 0 {
+				t.Errorf("want nil got %v", found)
+			}
+			if found := tree.Find(toroquatre.Vector{X: 0.99, Y: 2.99}, toroquatre.Vector{X: 1.01, Y: 3.01}); len(found) != 1 {
+				t.Errorf("want one item got %v", found)
+			}
+			if !tree.Remove(0) {
+				t.Errorf("want true got false")
+			}
+			if tree.Remove(0) {
+				t.Errorf("want false got true")
 			}
 		})
 	}
